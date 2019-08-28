@@ -542,25 +542,34 @@ CREATEDLL_API int i2c_init()
     ftStatus = FT_ListDevices(&numDevs,NULL,FT_LIST_NUMBER_ONLY);
 
     printf("numberofDev: 0x%x\n",numDevs);
-    if (numDevs!=1) 
-    {
-        printf("Error  : too many FTDI devices! Not support for the moment.\n");
-        printf("         Find Q for support!\n");
-        return(1);
-    }
 
-    long locIdBuf[16];
-    ftStatus = FT_ListDevices(locIdBuf,&numDevs,FT_LIST_ALL|FT_OPEN_BY_LOCATION);
-    printf("locId of first= 0x%x\n",locIdBuf[0]);
+	long locIdBuf[16];
+	for (int i = 0; i < 16; i++) {
+		locIdBuf[i] = 0;
+	}
+	if (numDevs != 1)
+	{
+		printf("Warning: too many FTDI devices! Not support for the moment.\n");
+		printf("         Find Q for support!\n");
+		//return(1);
+	}
+		
+	ftStatus = FT_ListDevices(locIdBuf, &numDevs, FT_LIST_ALL | FT_OPEN_BY_LOCATION);
+	printf("locId of first= 0x%x\n", locIdBuf[0]);
+	printf("locId of second= 0x%x\n", locIdBuf[1]);
 		
 	// Open the UM232H module by it's description in the EEPROM
 	// Note: See FT_OpenEX in the D2xx Programmers Guide for other options available
 	//ftStatus = FT_OpenEx("UM232H", FT_OPEN_BY_DESCRIPTION, &ftHandle);
-	//ftStatus = FT_OpenEx("USB Serial Converter", FT_OPEN_BY_DESCRIPTION, &ftHandle);
-    PVOID dwLoc;
-    dwLoc = PVOID(locIdBuf[0]);
-	ftStatus = FT_OpenEx(dwLoc, FT_OPEN_BY_LOCATION, &ftHandle);
 	
+	if (numDevs!=1) {
+		ftStatus = FT_OpenEx(PVOID("USB Serial Converter"), FT_OPEN_BY_DESCRIPTION, &ftHandle);
+	} else {
+		PVOID dwLoc;
+		dwLoc = PVOID(locIdBuf[0]);
+		ftStatus = FT_OpenEx(dwLoc, FT_OPEN_BY_LOCATION, &ftHandle);
+	}
+
 	// Check if Open was successful
 	if (ftStatus != FT_OK)
 	{
